@@ -80,6 +80,19 @@ const Charts = () => {
   }, [messages]);
  
 
+   useEffect(()=>{
+    const userTok = localStorage.getItem('usertoken');
+    const noneuser = () => {
+       if(!userTok) {
+        window.location.href = '/';
+       }
+
+    }
+
+    noneuser()
+    
+   })
+
 
 
   useEffect(() => {
@@ -152,7 +165,7 @@ checkuser()
 
 
 useEffect( () => {
-  console.log(":jjjj")
+  
   const getMesssages = async () => {
   const data = await JSON.parse(
     localStorage.getItem("usertoken")

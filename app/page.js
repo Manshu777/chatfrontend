@@ -1,113 +1,255 @@
+'use client'
+
 import Image from "next/image";
+import React, { useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+import CoverImg from '../public/images/coverimg.png'; 
+// Replace with your image path
+import Api from './utility/Api';
+import axios from 'axios';
+
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    
+  const [activeTab, setActiveTab] = useState('signup');
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    img: '',
+  });
+  const [user, setUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  const handleChange = (e) => {
+    if (e.target.name === 'img') {
+      setFormData({ ...formData, img: e.target.files[0] });
+    } else {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
+  };
+
+
+   
+
+  
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    try {
+      const form = new FormData();
+      form.append('email', formData.email);
+      form.append('password', formData.password);
+  
+      if (activeTab === 'signup') {
+        form.append('username', formData.username);
+        form.append('profileImage', formData.img);
+  
+        const response = await axios.post(`${Api}/signup`, form, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+
+
+        console.log(response)
+  
+        if (response.status === 201) {
+          localStorage.setItem('usertoken', JSON.stringify(response.data.newUser));
+          window.location.href = '/chats';
+        } else if (response.status === 404) {
+          // Handle invalid credentials
+          toast.error('user are available');
+        } 
+      
+  
+      } else if (activeTab === 'signin') {
+        const response = await axios.post(`${Api}/login`, formData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+  
+
+  
+        // Check for successful login status
+        if (response.status === 200) {
+          localStorage.setItem('usertoken', JSON.stringify(response.data.user));
+          window.location.href = '/chats';
+        } else if (response.status === 401) {
+          // Handle invalid credentials
+          toast.error('Invalid email or password');
+        } else {
+         
+          toast.error('Unexpected error occurred',response.status);
+        }
+      }
+    } catch (error) {
+      // Handle network or other unexpected errors
+      console.error('Error submitting form:', error);
+  
+      if (axios.isAxiosError(error)) {
+        // Handle specific Axios errors
+        const { response } = error;
+        if (response && response.status === 401) {
+          toast.error('Invalid email or password');
+        } else {
+          toast.error('Unexpected error occurred');
+        }
+      } else {
+        // Handle other types of errors
+        toast.error('Error processing request');
+      }
+    }
+  };
+  return (
+  <>
+    <div className="w-full min-h-screen flex items-center justify-center bg-gray-100">
+     <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
+      <div className="w-[80%] bg-white shadow-md rounded-md  md:flex md:items-center">
+      <div className="md:w-[40%] mb-4 md:mb-0 flex  justify-center lg:p-0  max-md:p-4">
         <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+          src={CoverImg}
+          alt="Your Image"
+          className="w-full h-auto md:h-[670px] max-md:h-[160px]  max-sm:h-[160px] lg:rounded-none md:rounded-none max-md:rounded-[20px]"
         />
       </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+        <div className="md:w-[60%] md:ml-4 p-4">
+          <div className="flex justify-center mb-4">
+            <button
+              className={`mr-2 px-4 py-2 focus:outline-none ${
+                activeTab === 'signup'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-800'
+              }`}
+              onClick={() => handleTabChange('signup')}
+            >
+              Sign Up
+            </button>
+            <button
+              className={`px-4 py-2 focus:outline-none ${
+                activeTab === 'signin'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-800'
+              }`}
+              onClick={() => handleTabChange('signin')}
+            >
+              Sign In
+            </button>
+          </div>
+          <form onSubmit={handleSubmit}>
+            {activeTab === 'signup' && (
+                <div>
+                <h2 className="text-2xl font-semibold mb-4">Sign Up</h2>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    className="border rounded-md text-gray-700 py-2 px-3 w-full focus:outline-none focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="border text-gray-700 rounded-md py-2 px-3 w-full focus:outline-none focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="border text-gray-700 rounded-md py-2 px-3 w-full focus:outline-none focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Profile Picture
+                  </label>
+                  <input
+                    type="file"
+                    name="img"
+                    accept="image/*"
+                    onChange={handleChange}
+                    className="border text-gray-700 rounded-md py-2 px-3 w-full focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white py-2 px-4 rounded-md w-full hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue"
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
+            {activeTab === 'signin' && (
+                <div>
+                <h2 className="text-2xl font-semibold mb-4">Sign In</h2>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="border text-gray-700 rounded-md py-2 px-3 w-full focus:outline-none focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="border  text-gray-700 rounded-md py-2 px-3 w-full focus:outline-none focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white py-2 px-4 rounded-md w-full hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue"
+                >
+                  Sign In
+                </button>
+              </div>
+            )}
+          </form>
+        </div>
       </div>
-    </main>
+    </div>
+  </>
   );
 }

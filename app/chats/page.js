@@ -16,10 +16,11 @@ import axios from 'axios';
 import Welcom from '../components/Welcome';
 
 import bg from '../../public/images/bg.png';
+import Api from '../utility/Api';
 
 const Charts = () => {
 
-  const host = "https://chatbackend-5pxo.onrender.com"
+  const host = "https://backendnewchat.onrender.com"
   const [messageInput,setMessageInput] = useState();
   const [slectuser,setselectuser] = useState(true);
   const [messages, setMessages] = useState([]);
@@ -112,7 +113,7 @@ checkuser()
      if (currentUser) {
        try {
 
-         const response = await axios.get(`https://chatbackend-5pxo.onrender.com/alluser/${currentUser._id}`);
+         const response = await axios.get(`${Api}/alluser/${currentUser._id}`);
           console.log(currentUser._id);
          setContacts(response.data);
        } catch (error) {
@@ -138,16 +139,16 @@ checkuser()
   console.log(currentUser._id);
 
 
-  socket.current.emit("send-msg", {
+  socket.current.emit(`send-msg`, {
     to: currentChat._id,
     from: data._id,
     messageInput,
   });
 
+   console.log("Jjjjj",data._id)
    
-
   
-  const res = await axios.post("https://chatbackend-5pxo.onrender.com/messages", {
+  const res = await axios.post(`${Api}/messages`, {
     from: data._id,
     to: currentChat._id,
     message: messageInput,
@@ -171,10 +172,10 @@ useEffect( () => {
     localStorage.getItem("usertoken")
   );
   //  (data._id)
-  console.log(data);
+  // console.log(data);
   setCurrentUser(data)
   
-  const response = await axios.post("https://chatbackend-5pxo.onrender.com/getmessages", {
+  const response = await axios.post(`${Api}/getmessages`, {
     from: data._id,
     to: currentChat?._id,
   });
@@ -194,9 +195,11 @@ getMesssages()
 
  useEffect(() => {
   const getLivemesg = () => {
+    console.log(socket.current)
      if (socket.current) {
+      console.log("true")
         socket.current.on("msg-recieve", (msg) => {
-            
+             console.log(msg)
            setArrivalMessage({ fromSelf: false, message: msg });
         });    
      }
@@ -242,7 +245,7 @@ const backgroundImageStyle = {
 
  
     <div className="flex flex-col h-screen bg-gray-100">
-       {console.log(sendicon)}
+     
       {/* Header */}
       <header className="flex flex-col bg-white p-4 text-white">
       <div className='w-full flex max-md:justify-around'>
@@ -263,7 +266,7 @@ const backgroundImageStyle = {
     <Image
        width={100}
        height={100}
-      src={`https://chatbackend-5pxo.onrender.com/uploads/${currentChat?.profileImage}`}
+      src={`${Api}/uploads/${currentChat?.profileImage}`}
       alt="User Image"
       className="w-10 h-10 rounded-full mr-2"
     />
@@ -300,13 +303,14 @@ const backgroundImageStyle = {
           <div ref={scrollRef
           
           }>
-        <div  key={index} className={`flex ${message.fromSelf ? 'justify-end' : 'justify-start'}`}>
+        <div id={index} key={index} className={`flex ${message.fromSelf ? 'justify-end' : 'justify-start'}`}>
           <div
+           key={index}
             className={`message px-2 py-1 max-w-md m-2 ${
               message.fromSelf ? 'bg-[#78E378] text-black rounded-lg ml-auto' : 'bg-[#FFFFFF] text-black rounded-lg mr-auto'
             }`}
           >
-            <div className="content">
+            <div className="content" key={index}>
               <p>{message.message}</p>
             </div>
           </div>
@@ -325,7 +329,7 @@ const backgroundImageStyle = {
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className="flex-1 pl-10 py-2 px-4 relative bg-transparent rounded-l focus:outline-none"
+                    className="flex-1 pl-10 py-2 text-black px-4 relative bg-transparent rounded-l focus:outline-none"
                 />
 
                 <div className="mx-2 font-bold text-cyan-900 absolute top-[9px] left-[6px]" onClick={toggleEmojiPicker}>
